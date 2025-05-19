@@ -3,7 +3,7 @@ import numba
 import itertools
 
 
-def rot_m(t, p):
+def make_rotation_matrix(t, p):
     '''
     Creates a 3x3 rotation matrix for the angles
     t (theta) and p (psi)
@@ -49,7 +49,7 @@ def voight_6x6_to_elastic_3x3_tensor(C_voight):
     return Cijkl
 
 
-def mk66(Cijkl):
+def elastic_3x3_tensor_to_voight(Cijkl):
 
     Cijkl = np.asarray(Cijkl)
     if Cijkl.shape != (3, 3, 3, 3):

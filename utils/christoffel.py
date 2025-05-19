@@ -61,6 +61,7 @@ def calc_velocity_and_attenuation(cmplx_c, rho, incs, azis):
 
     return velocity, attenuation, fast_polarisations
 
+
 def sphe2cart(inc, azi):
     '''
     Converts from spherical to cartesian co-ordinates where:
@@ -92,6 +93,7 @@ def sphe2cart(inc, azi):
     r = np.sqrt(X[0]**2 + X[1]**2 + X[2]**2)
     
     return X/r
+
 
 def christoffel_solver(C, rho, inc, azi):
     '''
@@ -153,10 +155,11 @@ def christoffel_solver(C, rho, inc, azi):
     if fpol < -90:
         fpol = fpol + 180
     elif fpol > 90:
-        fpol = fpol - 180 
+        fpol = fpol - 180
     velocity = velo_raw[idx]
     attenuation = q_raw[idx]
     return velocity, attenuation, fpol
+
 
 def v_rot_gamma(vec, gamma):
     '''
@@ -179,6 +182,7 @@ def v_rot_gamma(vec, gamma):
                         [-1*np.sin(g_rad), np.cos(g_rad), 0],
                         [0, 0, 1]])
     return vec @ rotmat
+
 
 def v_rot_beta(vec, beta):
     '''

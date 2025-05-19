@@ -7,6 +7,7 @@ Created on Mon Mar 14 15:03:59 2022
 """
 import numpy as np
 
+
 def hudson_c0(lam, mu):
     '''
     Form isotropic matrix based on lamda and mu
@@ -34,6 +35,7 @@ def hudson_c0(lam, mu):
                   [  0,   0,   0,  0,  0, mu]
                 ])
     return c
+
 
 def hudson_c1(cden, lam, mu, D):
     '''
@@ -69,6 +71,7 @@ def hudson_c1(cden, lam, mu, D):
     c1 = -(cden/mu)*np.matmul(M, D)
     return c1
 
+
 def hudson_c2(cden, lam, mu, D):
     '''
     Calculate second order perturbations using Hudson (1982) equations (via Crampin (1984) eqn. 3)
@@ -100,9 +103,11 @@ def hudson_c2(cden, lam, mu, D):
                   [    0,           0,           0,     0,     X,     0],
                   [    0,           0,           0,     0,     0,     X]
                 ])
+    # square diagonal crack compliance matrix
     D2 = np.matmul(D, D)
-    c2 = (cden**2/15)* np.matmul(M, D2)
+    c2 = (cden**2/15) * np.matmul(M, D2)
     return c2
+
 
 def hudson_c_real(lam, mu, u11, u33, cden):
     '''
@@ -169,31 +174,34 @@ def hudson_complex_c(lam, mu, rho, kappap, mup, cden, crad, aspect, freq):
     '''
     vp = np.sqrt((lam + 2*mu)/rho)
     vs = np.sqrt(mu/rho)
+    # calculate crack compliances
     u11, u33 = calculate_u_coefficiants(lam, mu, kappap, mup, aspect)
     # Find real parts of complex elastic tensor (these give us velocity anisotropy)
     c_real = hudson_c_real(lam, mu, u11, u33, cden)
     # Use equation 6 of Crampin to estimate imaginary part of C
-    # Calculate specific values of Q as required by Crapin's method
+    # Calculate specific values of Q as required by Crampin's method
     qp0, qsr0, _ = approx_q_values(0, freq, cden, crad, vp, vs, u11, u33)
     qp45, _, _ = approx_q_values(45, freq, cden, crad, vp, vs, u11, u33)
     qp90, qsr90, _ = approx_q_values(90, freq, cden, crad, vp, vs, u11, u33)
     # terms A and B are defined by a combination of some of the other imaginary elastic constants
     # Crampin uses notation c_ijkl, I will use voight (C_mn) notation
     # Indexing starts from 0 so C_11 = c[0,0]
-    ci_11 = c_real[0,0]*qp0
-    ci_22 = c_real[1,1]*qp90
-    ci_44 = c_real[3,3]*qsr90 # this is c2323 in Crampin (1984)
-    ci_66 = c_real[5,5]*qsr0 # this is c3131 in Crampin (1984)
-    A = qp45*((c_real[0,0]+c_real[1,1])/2 + c_real[0,1] + 2*c_real[5,5]) - 0.5*(ci_11 + ci_22) - 2*ci_66
+    ci_11 = c_real[0, 0]*qp0
+    ci_22 = c_real[1, 1]*qp90
+    # this is c2323 in Crampin (1984)
+    ci_44 = c_real[3, 3]*qsr90
+    # this is c3131 in Crampin (1984)
+    ci_66 = c_real[5, 5]*qsr0
+    A = qp45*((c_real[0, 0]+c_real[1, 1])/2 + c_real[0,1] + 2*c_real[5,5]) - 0.5*(ci_11 + ci_22) - 2*ci_66
     B = ci_22 - 2*ci_44
     # Now make cI
     c_imag = np.array([
-                  [ ci_11,     A,     A,     0,     0,     0],
-                  [     A, ci_22,     B,     0,     0,     0],
-                  [     A,     B, ci_22,     0,     0,     0],
-                  [     0,     0,     0, ci_44,     0,     0],
-                  [     0,     0,     0,     0, ci_66,     0],
-                  [     0,     0,     0,     0,     0, ci_66]
+                  [ci_11,     A,     A,     0,     0,     0],
+                  [    A, ci_22,     B,     0,     0,     0],
+                  [    A,     B, ci_22,     0,     0,     0],
+                  [    0,     0,     0, ci_44,     0,     0],
+                  [    0,     0,     0,     0, ci_66,     0],
+                  [    0,     0,     0,     0,     0, ci_66]
                 ])
     c_cmplx = c_real + 1j*c_imag
     return c_cmplx
@@ -232,6 +240,7 @@ def calculate_u_coefficiants(lam, mu, kappap, mup, aspr):
     u33 = (16.0/3.0)*(t1/t2)/(1.0+m)
 
     return u11, u33
+
 
 def approx_q_values(theta, freq, cden, cr, vp, vs, u11, u33):
     '''

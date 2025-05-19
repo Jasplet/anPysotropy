@@ -109,7 +109,7 @@ def hudson_c2(cden, lam, mu, D):
     return c2
 
 
-def hudson_c_real(lam, mu, u11, u33, cden):
+def calc_hudson_c_real(lam, mu, u11, u33, cden):
     '''
     Creates the elastic tensor for a cracked solid , with cracks normal to the X1 axis.
     We use Crampin (1984)'s formulation of Hudson (1981, 1982)
@@ -141,49 +141,37 @@ def hudson_c_real(lam, mu, u11, u33, cden):
     return cR
 
 
-def hudson_complex_c(lam, mu, rho, kappap, mup, cden, crad, aspect, freq):
+def calc_hudson_c_imag(c_real, freq, cden, crad, vp, vs, u11, u33):
     '''
-    Calculates the complex (anelastic) components of the elastic tensor for a cracked solid.
-
-    This implementation follows equation 6 of Crampin (1984), using Hudson modelling (scattering).
-
-    Parameters
+     Use equation 6 of Crampin (1984) to estimate imaginary part of C
+    Parameters:
     ----------
+    cR : array, shape (6,6)
+        real components of elastic tensor from calc_hudson_c_real
     lam : float
-        1st lamee parameter of the uncracked solid
+        1st lamee parameter (lambda) of the uncracked solid
     mu : float
         shear modulus of the uncracked solid
-    rho : 
-        density of the uncracked solid
-    kappap : float
-        bulk modulus of the crack fill material 
-    mup : float
-        shear modulus of the crack fill material 
+    u11 : float
+        coefficiant U11 from Crampin (1984)
+    u33 : float
+        coefficiant U33 from Crampin (1984)
     cden : float
-        crack density 
-    aspect :
-        aspect ratio of cracks
-    freq : float
-        frequency of sampling waves
+        crack density
 
-    Returns
-    -------
+    Returns:
+    ----------
+    c_imag : array, shape (6,6)
+        imaginary components of a complex elastic tensor calculated
+        according to Crampin (1984)'s approximations. In voight notation
 
-    c_cmplx : complex array
-        the complex elastic tensor for a cracked solid expected from Hudson modelling
     '''
-    vp = np.sqrt((lam + 2*mu)/rho)
-    vs = np.sqrt(mu/rho)
-    # calculate crack compliances
-    u11, u33 = calculate_u_coefficiants(lam, mu, kappap, mup, aspect)
-    # Find real parts of complex elastic tensor (these give us velocity anisotropy)
-    c_real = hudson_c_real(lam, mu, u11, u33, cden)
-    # Use equation 6 of Crampin to estimate imaginary part of C
     # Calculate specific values of Q as required by Crampin's method
     qp0, qsr0, _ = approx_q_values(0, freq, cden, crad, vp, vs, u11, u33)
     qp45, _, _ = approx_q_values(45, freq, cden, crad, vp, vs, u11, u33)
     qp90, qsr90, _ = approx_q_values(90, freq, cden, crad, vp, vs, u11, u33)
-    # terms A and B are defined by a combination of some of the other imaginary elastic constants
+    # terms A and B are defined by a combination of some of the other
+    # imaginary elastic constants
     # Crampin uses notation c_ijkl, I will use voight (C_mn) notation
     # Indexing starts from 0 so C_11 = c[0,0]
     ci_11 = c_real[0, 0]*qp0
@@ -203,8 +191,7 @@ def hudson_complex_c(lam, mu, rho, kappap, mup, cden, crad, aspect, freq):
                   [    0,     0,     0,     0, ci_66,     0],
                   [    0,     0,     0,     0,     0, ci_66]
                 ])
-    c_cmplx = c_real + 1j*c_imag
-    return c_cmplx
+    return c_imag
 
 
 def calculate_u_coefficiants(lam, mu, kappap, mup, aspr):
@@ -293,3 +280,48 @@ def approx_q_values(theta, freq, cden, cr, vp, vs, u11, u33):
     qsp2 = (x*np.cos(2*thetar)**2 + y*np.sin(2*thetar)**2)
     qsp_inv = qsp1*qsp2
     return qp_inv, qsr_inv, qsp_inv
+
+
+def make_hudson_tensor(lam, mu, rho, kappap, mup, cden, crad, aspect, freq, return_complex=True):
+    '''
+    Calculates the complex (anelastic) components of the elastic tensor for a cracked solid.
+
+    This implementation follows equation 6 of Crampin (1984), using Hudson modelling (scattering).
+
+    Parameters
+    ----------
+    lam : float
+        1st lamee parameter of the uncracked solid
+    mu : float
+        shear modulus of the uncracked solid
+    rho : 
+        density of the uncracked solid
+    kappap : float
+        bulk modulus of the crack fill material 
+    mup : float
+        shear modulus of the crack fill material 
+    cden : float
+        crack density 
+    aspect :
+        aspect ratio of cracks
+    freq : float
+        frequency of sampling waves
+
+    Returns
+    -------
+
+    c_cmplx : complex array
+        the complex elastic tensor for a cracked solid expected from Hudson modelling
+    '''
+    vp = np.sqrt((lam + 2*mu)/rho)
+    vs = np.sqrt(mu/rho)
+    # calculate crack compliances
+    u11, u33 = calculate_u_coefficiants(lam, mu, kappap, mup, aspect)
+    # Find real parts of complex elastic tensor (these give us velocity anisotropy)
+    c_real = calc_hudson_c_real(lam, mu, u11, u33, cden)
+    if return_complex:
+        c_imag = calc_hudson_c_imag(c_real, freq, cden, crad, vp, vs, u11, u33)
+        c_cmplx = c_real + 1j*c_imag
+        return c_cmplx
+    else:
+        return c_real

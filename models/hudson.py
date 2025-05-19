@@ -282,7 +282,16 @@ def approx_q_values(theta, freq, cden, cr, vp, vs, u11, u33):
     return qp_inv, qsr_inv, qsp_inv
 
 
-def make_hudson_tensor(lam, mu, rho, kappap, mup, cden, crad, aspect, freq, return_complex=True):
+def make_hudson_tensor(lam,
+                       mu,
+                       rho,
+                       kappap,
+                       mup,
+                       cden,
+                       aspect,
+                       crad=None,
+                       freq=None,
+                       return_complex=False):
     '''
     Calculates the complex (anelastic) components of the elastic tensor for a cracked solid.
 
@@ -297,11 +306,11 @@ def make_hudson_tensor(lam, mu, rho, kappap, mup, cden, crad, aspect, freq, retu
     rho : 
         density of the uncracked solid
     kappap : float
-        bulk modulus of the crack fill material 
+        bulk modulus of the crack fill material
     mup : float
-        shear modulus of the crack fill material 
+        shear modulus of the crack fill material
     cden : float
-        crack density 
+        crack density
     aspect :
         aspect ratio of cracks
     freq : float
@@ -320,6 +329,11 @@ def make_hudson_tensor(lam, mu, rho, kappap, mup, cden, crad, aspect, freq, retu
     # Find real parts of complex elastic tensor (these give us velocity anisotropy)
     c_real = calc_hudson_c_real(lam, mu, u11, u33, cden)
     if return_complex:
+        if crad is None:
+            raise ValueError('crad must be provided to calculate complex elastic tensor')
+        if freq is None:
+            raise ValueError('freq must be provided to calculate complex elastic tensor')
+        # calculate imaginary parts of complex elastic tensor (these give us attenuation)
         c_imag = calc_hudson_c_imag(c_real, freq, cden, crad, vp, vs, u11, u33)
         c_cmplx = c_real + 1j*c_imag
         return c_cmplx

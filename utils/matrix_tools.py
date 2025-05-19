@@ -64,7 +64,7 @@ def mk66(Cijkl):
 
 
 @numba.jit(nopython=True)
-def rotate_tesnor(Cijkl, R):
+def rotate_tensor(Cijkl, R):
     '''
     Rotates 4th order 3x3x3x3 tensor T by a 3x3 
     rotation matrix rotmat.

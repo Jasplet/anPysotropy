@@ -74,7 +74,7 @@ def drained_ape(s1,
                            material['mu'],
                            material['eps'],
                            material['r'],
-material['kf'])
+                           material['kf'])
     for i in range(0, npsi):
         for j in range(0, ntheta):
             pp = psi[i]

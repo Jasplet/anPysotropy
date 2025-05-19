@@ -13,7 +13,7 @@ def drained_r(psi,
               r0,
               crit):
     '''
-    Calculates ascpect ratio distrubution for drained case
+    Calculates aspect ratio distrubution for drained case
     in APE model (Zatespin et al., 1997)
     '''
     Np = psi.shape[0]

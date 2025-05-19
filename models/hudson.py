@@ -8,7 +8,7 @@ Created on Mon Mar 14 15:03:59 2022
 import numpy as np
 
 
-def hudson_c0(lam, mu):
+def make_hudson_c0(lam, mu):
     '''
     Form isotropic matrix based on lamda and mu
 
@@ -37,7 +37,7 @@ def hudson_c0(lam, mu):
     return c
 
 
-def hudson_c1(cden, lam, mu, D):
+def make_hudson_c1(cden, lam, mu, D):
     '''
     Calculate first order perturbations using Hudson (1981) equations (via Crampin (1984) eqn. 2)
 
@@ -72,7 +72,7 @@ def hudson_c1(cden, lam, mu, D):
     return c1
 
 
-def hudson_c2(cden, lam, mu, D):
+def make_hudson_c2(cden, lam, mu, D):
     '''
     Calculate second order perturbations using Hudson (1982) equations (via Crampin (1984) eqn. 3)
 
@@ -134,9 +134,9 @@ def calc_hudson_c_real(lam, mu, u11, u33, cden):
 
     '''
     D = np.diag(np.array([u11, u11, u11, 0, u33, u33]))
-    c0 = hudson_c0(lam, mu)
-    c1 = hudson_c1(cden, lam, mu, D)
-    c2 = hudson_c2(cden, lam, mu, D)
+    c0 = make_hudson_c0(lam, mu)
+    c1 = make_hudson_c1(cden, lam, mu, D)
+    c2 = make_hudson_c2(cden, lam, mu, D)
     cR = c0 + c1 + c2
     return cR
 

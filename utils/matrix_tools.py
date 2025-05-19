@@ -26,10 +26,12 @@ def voight_index_from_3x3_tensor(i, j):
     Converts indices of the full 3x3x3x3 elastic tensor
     to Voight incicies
     '''
+    if i > 5 or j > 5:
+        raise ValueError(f'Invalid index: {i}, {j}. Dont forget python indexes start at 0')
     if i == j:
         idx = i
     else:
-        idx = 9 - i - j
+        idx = 6 - i - j
     return idx
 
 

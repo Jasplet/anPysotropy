@@ -74,16 +74,16 @@ def drained_ape(s1,
                   s2,
                   s3,
                   p,
-                  material['r0'],
+                  material['init_aspect'],
                   material['crit'])
     # calculate the anisotropic elastic tensor
     # calc base hudson tensor outside of loops
     # is it does not depend on anything inside.
-    H_base = make_hudson_tensor(material['lam'],
-                                material['mu'],
-                                material['cden'],
-                                material['aspect_ratio'],
-                                material['kf'],
+    H_base = make_hudson_tensor(lam=material['lam'],
+                                mu=material['mu'],
+                                cden=material['cden'],
+                                aspect=material['init_aspect'],
+                                kappap=material['kf'],
                                 mup=0)
     # lam     : uncracked lame modulus
     # mu      : uncracked shear modulus
@@ -99,7 +99,7 @@ def drained_ape(s1,
                 pass
             else:
                 R = make_rotation_matrix(-1.0*theta, -1.0*psi)
-                r = r * material['r0']
+                r = r * material['init_aspect']
                 # copy H_base so we can modify it without changing the original
                 H = H_base.copy()
                 dH = (H - C_iso_voight) * dtheta * dpsi * np.sin(psi) / (4.0 * np.pi)
@@ -122,6 +122,12 @@ def undrained_ape(s1,
     Calculates an anisotropic APE tensor (6x6 Voight notiation form)
     for undrained cracks in a rock matrix. Hudson (1981)'s model is
     used for crack anisotropy.
+
+
+    psi is the Euler angle between the crack normal and vertical (x3) axis
+    theta is the Euler angle betwqeen the projection of the crack normal
+    on the horizontal plane and the x1 axis.
+
     '''
     psis = np.linspace(0, np.pi, npsi)
     thetas = np.linspace(0, 2.0*np.pi, ntheta)
@@ -145,13 +151,14 @@ def undrained_ape(s1,
     for m in range(npressures):
         pt = np.power(10, pressures[m])
         g = drained_r(psis,
-                      thetas
+                      thetas,
+                      s1,
                       s2,
                       s3,
                       pt,
-                      material['r0'],
+                      material['init_aspect'],
                       material['crit'])
-        g = g/material['r0']
+        g = g/material['init_aspect']
         # vg = 0.0
         # for i, ipsi in enumerate(npsi):
         #     for j in range(ntheta):
@@ -175,16 +182,16 @@ def undrained_ape(s1,
                   s2,
                   s3,
                   p,
-                  material['r0'],
+                  material['init_aspect'],
                   material['crit'])
     # calculate the anisotropic elastic tensor
     # calc base hudson tensor outside of loops
     # is it does not depend on anything inside.
-    H_base = make_hudson_tensor(material['lam'],
-                                material['mu'],
-                                material['cden'],
-                                material['aspect_ratio'],
-                                material['kf'],
+    H_base = make_hudson_tensor(lam=material['lam'],
+                                mu=material['mu'],
+                                cden=material['cden'],
+                                aspect=material['init_aspect'],
+                                kappap=material['kf'],
                                 mup=0)
     for i in range(0, npsi):
         for j in range(0,):
@@ -195,12 +202,12 @@ def undrained_ape(s1,
                 pass
             else:
                 R = make_rotation_matrix(-1.0*theta, -1.0*psi)
-                r = r * material['r0']
+                r = r * material['init_aspect']
                 H = H_base.copy()
                 dH = (H - C_iso_voight)*dtheta*dpsi*np.sin(psi)/(4.0*np.pi)
                 dH4 = voight_6x6_to_elastic_3x3_tensor(dH)
                 dH4r = rotate_tensor(dH4, R)
-                C0 = C0 + dH4r
+                C_ijkl += dH4r
     # convert back to 6x6 Voight notation matrix for output
 
-    return elastic_3x3_tensor_to_voight(C0)
+    return elastic_3x3_tensor_to_voight(C_ijkl)

@@ -284,11 +284,11 @@ def approx_q_values(theta, freq, cden, cr, vp, vs, u11, u33):
 
 def make_hudson_tensor(lam,
                        mu,
-                       rho,
                        kappap,
                        mup,
                        cden,
                        aspect,
+                       rho=None,
                        crad=None,
                        freq=None,
                        return_complex=False):
@@ -322,8 +322,7 @@ def make_hudson_tensor(lam,
     c_cmplx : complex array
         the complex elastic tensor for a cracked solid expected from Hudson modelling
     '''
-    vp = np.sqrt((lam + 2*mu)/rho)
-    vs = np.sqrt(mu/rho)
+
     # calculate crack compliances
     u11, u33 = calculate_u_coefficiants(lam, mu, kappap, mup, aspect)
     # Find real parts of complex elastic tensor (these give us velocity anisotropy)
@@ -333,7 +332,11 @@ def make_hudson_tensor(lam,
             raise ValueError('crad must be provided to calculate complex elastic tensor')
         if freq is None:
             raise ValueError('freq must be provided to calculate complex elastic tensor')
+        if rho is None:
+            raise ValueError('rho must be provided to calculate complex elastic tensor')
         # calculate imaginary parts of complex elastic tensor (these give us attenuation)
+        vp = np.sqrt((lam + 2*mu)/rho)
+        vs = np.sqrt(mu/rho)
         c_imag = calc_hudson_c_imag(c_real, freq, cden, crad, vp, vs, u11, u33)
         c_cmplx = c_real + 1j*c_imag
         return c_cmplx

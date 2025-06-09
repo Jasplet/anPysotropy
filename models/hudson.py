@@ -8,7 +8,7 @@ Created on Mon Mar 14 15:03:59 2022
 import numpy as np
 
 
-def hudson_c0(lam, mu):
+def make_hudson_c0(lam, mu):
     '''
     Form isotropic matrix based on lamda and mu
 
@@ -37,7 +37,7 @@ def hudson_c0(lam, mu):
     return c
 
 
-def hudson_c1(cden, lam, mu, D):
+def make_hudson_c1(cden, lam, mu, D):
     '''
     Calculate first order perturbations using Hudson (1981) equations (via Crampin (1984) eqn. 2)
 
@@ -72,7 +72,7 @@ def hudson_c1(cden, lam, mu, D):
     return c1
 
 
-def hudson_c2(cden, lam, mu, D):
+def make_hudson_c2(cden, lam, mu, D):
     '''
     Calculate second order perturbations using Hudson (1982) equations (via Crampin (1984) eqn. 3)
 
@@ -134,9 +134,9 @@ def calc_hudson_c_real(lam, mu, u11, u33, cden):
 
     '''
     D = np.diag(np.array([u11, u11, u11, 0, u33, u33]))
-    c0 = hudson_c0(lam, mu)
-    c1 = hudson_c1(cden, lam, mu, D)
-    c2 = hudson_c2(cden, lam, mu, D)
+    c0 = make_hudson_c0(lam, mu)
+    c1 = make_hudson_c1(cden, lam, mu, D)
+    c2 = make_hudson_c2(cden, lam, mu, D)
     cR = c0 + c1 + c2
     return cR
 
@@ -282,7 +282,16 @@ def approx_q_values(theta, freq, cden, cr, vp, vs, u11, u33):
     return qp_inv, qsr_inv, qsp_inv
 
 
-def make_hudson_tensor(lam, mu, rho, kappap, mup, cden, crad, aspect, freq, return_complex=True):
+def make_hudson_tensor(lam,
+                       mu,
+                       kappap,
+                       mup,
+                       cden,
+                       aspect,
+                       rho=None,
+                       crad=None,
+                       freq=None,
+                       return_complex=False):
     '''
     Calculates the complex (anelastic) components of the elastic tensor for a cracked solid.
 
@@ -297,11 +306,11 @@ def make_hudson_tensor(lam, mu, rho, kappap, mup, cden, crad, aspect, freq, retu
     rho : 
         density of the uncracked solid
     kappap : float
-        bulk modulus of the crack fill material 
+        bulk modulus of the crack fill material
     mup : float
-        shear modulus of the crack fill material 
+        shear modulus of the crack fill material
     cden : float
-        crack density 
+        crack density
     aspect :
         aspect ratio of cracks
     freq : float
@@ -313,13 +322,21 @@ def make_hudson_tensor(lam, mu, rho, kappap, mup, cden, crad, aspect, freq, retu
     c_cmplx : complex array
         the complex elastic tensor for a cracked solid expected from Hudson modelling
     '''
-    vp = np.sqrt((lam + 2*mu)/rho)
-    vs = np.sqrt(mu/rho)
+
     # calculate crack compliances
     u11, u33 = calculate_u_coefficiants(lam, mu, kappap, mup, aspect)
     # Find real parts of complex elastic tensor (these give us velocity anisotropy)
     c_real = calc_hudson_c_real(lam, mu, u11, u33, cden)
     if return_complex:
+        if crad is None:
+            raise ValueError('crad must be provided to calculate complex elastic tensor')
+        if freq is None:
+            raise ValueError('freq must be provided to calculate complex elastic tensor')
+        if rho is None:
+            raise ValueError('rho must be provided to calculate complex elastic tensor')
+        # calculate imaginary parts of complex elastic tensor (these give us attenuation)
+        vp = np.sqrt((lam + 2*mu)/rho)
+        vs = np.sqrt(mu/rho)
         c_imag = calc_hudson_c_imag(c_real, freq, cden, crad, vp, vs, u11, u33)
         c_cmplx = c_real + 1j*c_imag
         return c_cmplx
